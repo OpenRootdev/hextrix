@@ -1,13 +1,10 @@
-#!/usr/bin/env bash
-# Remove the hextrix binary installed by install.sh.
-set -euo pipefail
+#!/bin/sh
+# Hextrix uninstaller. Works piped or from a checkout:
+#   curl -fsSL https://raw.githubusercontent.com/atif-1402/hextrix/main/uninstall.sh | sh
+set -eu
 
 PREFIX="${PREFIX:-$HOME/.local}"
 BINDIR="$PREFIX/bin"
 
-if rm -f "$BINDIR/hextrix"; then
-    echo "removed: $BINDIR/hextrix"
-else
-    echo "nothing to remove at $BINDIR/hextrix" >&2
-    exit 1
-fi
+rm -f "$BINDIR/hextrix"
+echo "hextrix: removed $BINDIR/hextrix"

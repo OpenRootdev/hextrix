@@ -2,6 +2,13 @@
 
 **v1.0.0 — Stationary data, living color.**
 
+[![GitHub release](https://img.shields.io/github/v/release/atif-1402/hextrix?sort=semver)](https://github.com/atif-1402/hextrix/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Linux-lightgrey)](https://github.com/atif-1402/hextrix)
+[![ncurses](https://img.shields.io/badge/UI-ncurses-4c1)](https://invisible-island.net/ncurses/)
+
+**Quick jump:** [Install](#install) · [Build from source](#build-from-source) · [Options](#options) · [Keys](#keys) · [Accent colors](#accent-colors) · [Visualizers](#visualizer-styles) · [Audio](#audio) · [Environment](#environment) · [License](#license) · [Changelog](#changelog)
+
 ![Hextrix demo](assets/demo.gif)
 
 Hextrix fills your terminal with a dense grid of two-character hexadecimal
@@ -31,38 +38,39 @@ new random values.
   monotonic frame pacing, per-cell dirty tracking and no per-frame
   allocations.
 
-## Build
+## Install
 
-Arch Linux (Omarchy/Hyprland included):
-
-```bash
-sudo pacman -S --needed base-devel ncurses
-make
-./hextrix
-```
-
-One-shot install into `~/.local/bin` (usually already on PATH, and on
-Omarchy):
+One-liner — clones, builds and installs into `~/.local/bin` (already on PATH
+on Omarchy):
 
 ```bash
-./install.sh        # builds, then installs ~/.local/bin/hextrix
-hextrix
+curl -fsSL https://raw.githubusercontent.com/atif-1402/hextrix/main/install.sh | sh
 ```
 
-`./uninstall.sh` removes it again. Both scripts honor a custom `PREFIX`
-(default `~/.local`). The Makefile offers the same via `make install` /
-`make uninstall`.
-
-PipeWire headers are optional and detected automatically:
+Uninstall:
 
 ```bash
-sudo pacman -S --needed pipewire   # only needed for audio reactivity
-make clean && make
+curl -fsSL https://raw.githubusercontent.com/atif-1402/hextrix/main/uninstall.sh | sh
 ```
 
-No root privileges are required to compile. The only hard dependency is
-`ncursesw` (plus a C11 compiler); `libpipewire` is linked in only when
-`pkg-config` finds it.
+Both honor a custom `PREFIX` (default `~/.local`). They need `git`, `make`,
+a C11 compiler and `ncursesw` — on Arch:
+
+```bash
+sudo pacman -S --needed base-devel ncurses git
+```
+
+No root privileges are required. PipeWire headers are optional and detected
+automatically; install `pipewire` if you want audio reactivity.
+
+### Build from source
+
+```bash
+git clone https://github.com/atif-1402/hextrix.git
+cd hextrix
+make            # build only          -> ./hextrix
+./install.sh    # build + install     -> ~/.local/bin/hextrix
+```
 
 ### Options
 
@@ -176,6 +184,9 @@ Pointer/mouse tracking is not enabled in this build.
 hextrix/
 ├── Makefile
 ├── README.md
+├── LICENSE
+├── install.sh      build + install to ~/.local/bin (also curl-pipeable)
+├── uninstall.sh    remove it again
 ├── assets/
 │   └── demo.gif       screen recording of the app in a real terminal
 ├── src/
