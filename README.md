@@ -1,15 +1,33 @@
-# Hextrix
+<h1 align="center">Hextrix</h1>
 
-**v1.0.0 — Stationary data, living color.**
+<p align="center">
+  <b>v1.0.0 — Stationary data, living color.</b>
+</p>
 
-[![GitHub release](https://img.shields.io/github/v/release/atif-1402/hextrix?sort=semver)](https://github.com/atif-1402/hextrix/releases/latest)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Linux-lightgrey)](https://github.com/atif-1402/hextrix)
-[![ncurses](https://img.shields.io/badge/UI-ncurses-4c1)](https://invisible-island.net/ncurses/)
+<p align="center">
+  <a href="https://github.com/atif-1402/hextrix/releases/latest"><img src="https://img.shields.io/github/v/release/atif-1402/hextrix?sort=semver" alt="latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license: MIT"></a>
+  <a href="https://github.com/atif-1402/hextrix"><img src="https://img.shields.io/badge/platform-Linux-lightgrey" alt="platform: Linux"></a>
+  <a href="https://invisible-island.net/ncurses/"><img src="https://img.shields.io/badge/UI-ncurses-4c1" alt="UI: ncurses"></a>
+</p>
 
-**Quick jump:** [Install](#install) · [Build from source](#build-from-source) · [Options](#options) · [Keys](#keys) · [Accent colors](#accent-colors) · [Visualizers](#visualizer-styles) · [Audio](#audio) · [Environment](#environment) · [License](#license) · [Changelog](#changelog)
+<p align="center">
+  <b>Quick jump:</b>
+  <a href="#install">Install</a> ·
+  <a href="#build-from-source">Build from source</a> ·
+  <a href="#options">Options</a> ·
+  <a href="#keys">Keys</a> ·
+  <a href="#accent-colors">Accent colors</a> ·
+  <a href="#visualizer-styles">Visualizers</a> ·
+  <a href="#audio">Audio</a> ·
+  <a href="#environment">Environment</a> ·
+  <a href="#license">License</a> ·
+  <a href="#changelog">Changelog</a>
+</p>
 
-![Hextrix demo](assets/demo.gif)
+<p align="center">
+  <img src="assets/demo.gif" alt="Hextrix demo">
+</p>
 
 Hextrix fills your terminal with a dense grid of two-character hexadecimal
 tokens, like a frozen memory dump. The characters never move — only their
