@@ -8,6 +8,7 @@
  */
 
 #include <errno.h>
+#include <math.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -23,8 +24,9 @@
 #include "grid.h"
 #include "input.h"
 #include "renderer.h"
+#include "sweep.h"
 
-#define HX_VERSION "1.0.0"
+#define HX_VERSION "1.1.0"
 
 static volatile sig_atomic_t g_signal_quit = 0;
 static FILE *g_log = NULL;
@@ -60,6 +62,8 @@ static void usage(FILE *out, const char *prog)
             "Hextrix %s — terminal fluid color toy\n"
             "\n"
             "Usage: %s [options]\n"
+            "       %s sweep <seconds>   fill the grid, wipe top -> bottom\n"
+            "                             with acceleration, then exit\n"
             "\n"
             "  -a, --alnum      alphanumeric tokens instead of hexadecimal\n"
             "  -n, --no-audio   do not capture system audio\n"
@@ -73,7 +77,7 @@ static void usage(FILE *out, const char *prog)
             "      v           visualizer: off (liquid) / wave / rain\n"
             "      1-9         accent color (1 = red, the default)\n"
             "      left/right  fluid speed   esc closes help\n",
-            HX_VERSION, prog);
+            HX_VERSION, prog, prog);
 }
 
 static int count_red(const Fluid *f)
@@ -135,6 +139,7 @@ int main(int argc, char **argv)
     GridMode mode = GRID_HEX;
     bool want_audio = true;
     double fps = 60.0;
+    double sweep_secs = -1.0;       /* > 0: one-shot sweep subcommand */
     const char *prog = argc > 0 ? argv[0] : "hextrix";
 
     for (int i = 1; i < argc; i++) {
@@ -153,6 +158,24 @@ int main(int argc, char **argv)
                 fps = 10.0;
             if (fps > 120.0)
                 fps = 120.0;
+        } else if (strcmp(a, "sweep") == 0) {
+            if (sweep_secs > 0.0) {
+                fprintf(stderr, "hextrix: sweep specified twice\n");
+                return 2;
+            }
+            if (i + 1 >= argc) {
+                fprintf(stderr, "hextrix: sweep needs a duration in seconds\n");
+                usage(stderr, prog);
+                return 2;
+            }
+            char *end = NULL;
+            sweep_secs = strtod(argv[++i], &end);
+            if (end == argv[i] || *end != '\0' || !isfinite(sweep_secs) ||
+                sweep_secs < 0.1 || sweep_secs > 60.0) {
+                fprintf(stderr, "hextrix: sweep duration must be a number "
+                                "between 0.1 and 60 seconds\n");
+                return 2;
+            }
         } else if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
             usage(stdout, prog);
             return 0;
@@ -243,14 +266,23 @@ int main(int argc, char **argv)
     getmaxyx(stdscr, term_rows, term_cols);
 
     grid_init(&grid, term_cols, term_rows, mode);
-    fluid_init(&fluid, grid.cols, grid.rows);
-    renderer_init(&ren, grid.cols, grid.rows, color_ok, dim_pair);
-    ren.chip_pair = chip_pair;
     log_msg("grid: terminal %dx%d -> %d x %d tokens (cell width %d)",
             term_cols, term_rows, grid.cols, grid.rows, GRID_CELL_W);
 
     UiState ui;
     ui_init(&ui);
+
+    if (sweep_secs > 0.0) {
+        log_msg("sweep: start duration=%.2fs", sweep_secs);
+        exit_code = sweep_run((float)sweep_secs, &grid, color_ok, dim_pair,
+                              &g_signal_quit);
+        log_msg("sweep: finished exit=%d", exit_code);
+        goto cleanup;
+    }
+
+    fluid_init(&fluid, grid.cols, grid.rows);
+    renderer_init(&ren, grid.cols, grid.rows, color_ok, dim_pair);
+    ren.chip_pair = chip_pair;
     ren.accent = ui.accent;
 
     bool audio_ok = false;
@@ -398,6 +430,7 @@ int main(int argc, char **argv)
             next_frame = now_sec();
     }
 
+cleanup:
     log_msg("hextrix exiting (quit=%d signal=%d)", ui.quit ? 1 : 0,
             (int)g_signal_quit);
 

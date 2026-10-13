@@ -1,7 +1,7 @@
 <h1 align="center">Hextrix</h1>
 
 <p align="center">
-  <b>v1.0.0 — Stationary data, living color.</b>
+  <b>v1.1.0 — Stationary data, living color.</b>
 </p>
 
 <p align="center">
@@ -16,6 +16,7 @@
   <a href="#install">Install</a> ·
   <a href="#build-from-source">Build from source</a> ·
   <a href="#options">Options</a> ·
+  <a href="#sweep-mode">Sweep</a> ·
   <a href="#keys">Keys</a> ·
   <a href="#accent-colors">Accent colors</a> ·
   <a href="#visualizer-styles">Visualizers</a> ·
@@ -98,6 +99,19 @@ make            # build only          -> ./hextrix
 -f, --fps N      target frame rate, 10..120 (default 60)
 -h, --help       show usage
 -V, --version    show version
+```
+
+### Sweep mode
+
+`hextrix sweep <duration>` is a one-shot intro effect: it lights a random,
+incomplete subset of the tokens instantly (most of the grid stays empty),
+then a **wavy front** rolls down from above and washes the grid — already
+moving on the very first frame, accelerating as it falls over `<duration>` seconds (0.1–60) and exits
+as soon as the wiper reaches the last row. `q` / `Esc` / `Ctrl+C` aborts
+early (still a clean exit). Combine with `-a` for alphanumeric tokens:
+
+```bash
+hextrix sweep 0.5
 ```
 
 ### Keys
@@ -223,6 +237,19 @@ hextrix/
 MIT — see [LICENSE](LICENSE).
 
 ## Changelog
+
+### 1.1.0
+
+- New one-shot subcommand `hextrix sweep <duration>`: instant random fill
+  with plenty of empty cells, then a wavy front rolls down from above and
+  washes the grid — already moving on the first frame, accelerating as it
+  falls — and exits when done. `q` / `Esc` / `Ctrl+C` aborts cleanly.
+- `←` / `→` control fluid speed (0.15×–4×).
+- `?` toggles the help overlay alongside `h`; `Esc` closes it and no
+  longer stalls the animation.
+- Switching hints (accent, visualizer, speed) sit on a dim plate so they
+  stay readable over the tokens.
+- Fixed the pty test harness parser (CSI `J` / `K` parameters).
 
 ### 1.0.0
 

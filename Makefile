@@ -28,7 +28,8 @@ CFLAGS += -DHEXTRIX_HAVE_PIPEWIRE=1 $(PIPEWIRE_CFLAGS)
 LDLIBS += $(shell pkg-config --libs libpipewire-0.3) -lpthread
 endif
 
-SRC := src/main.c src/grid.c src/fluid.c src/renderer.c src/input.c src/audio.c
+SRC := src/main.c src/grid.c src/fluid.c src/renderer.c src/input.c \
+       src/audio.c src/sweep.c
 OBJ := $(SRC:src/%.c=build/%.o)
 DEP := $(OBJ:.o=.d)
 

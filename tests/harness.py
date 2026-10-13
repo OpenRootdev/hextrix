@@ -100,11 +100,29 @@ class Screen:
             self.cy = min(max(row - 1, 0), self.rows - 1)
         elif final == "J":
             mode = nums[0] if nums else 0
-            if mode == 2:
+            if mode in (2, 3):
                 self.ch = [[" "] * self.cols for _ in range(self.rows)]
                 self.red = [[False] * self.cols for _ in range(self.rows)]
+            elif mode == 1:
+                for y in range(0, self.cy):
+                    self.ch[y] = [" "] * self.cols
+                    self.red[y] = [False] * self.cols
+                for x in range(0, min(self.cx + 1, self.cols)):
+                    self.ch[self.cy][x] = " "
+                    self.red[self.cy][x] = False
+            else:  # mode 0: cursor through end of screen
+                for x in range(self.cx, self.cols):
+                    self.ch[self.cy][x] = " "
+                    self.red[self.cy][x] = False
+                for y in range(self.cy + 1, self.rows):
+                    self.ch[y] = [" "] * self.cols
+                    self.red[y] = [False] * self.cols
         elif final == "K":
-            for x in range(self.cx, self.cols):
+            mode = nums[0] if nums else 0
+            lo, hi = (0, self.cx + 1) if mode == 1 else \
+                     (0, self.cols) if mode == 2 else \
+                     (self.cx, self.cols)
+            for x in range(max(lo, 0), min(hi, self.cols)):
                 self.ch[self.cy][x] = " "
                 self.red[self.cy][x] = False
         elif final == "m":
@@ -224,6 +242,24 @@ def avg_red(app, seconds):
         app.pump(0.15)
         vals.append(app.screen.red_count())
     return sum(vals) / max(1, len(vals))
+
+
+def blank_frac(screen):
+    txt = screen.text()
+    blank = total = 0
+    for y in range(screen.rows):
+        for x in range(0, screen.cols - 1, 3):
+            total += 1
+            if txt[y][x] == " " and txt[y][x + 1] == " ":
+                blank += 1
+    return blank / total if total else 0.0
+
+
+def first_dirty_row(screen):
+    for y in range(screen.rows):
+        if any(screen.red[y]):
+            return y
+    return screen.rows
 
 
 def token_map(screen):
@@ -508,6 +544,65 @@ def test_speed():
     app.close()
 
 
+def test_sweep():
+    app = App(rows=20, cols=60, args=["-n", "sweep", "2.0"],
+              log="/tmp/hx_sweep.log")
+    t0 = time.time()
+    app.pump(0.2)
+    check("sweep stays alive after instant fill", app.alive())
+    red0 = app.screen.red_count()
+    check("sweep starts with an instant random fill",
+          red0 > 100, f"red={red0}")
+    b0 = blank_frac(app.screen)
+    check("grid keeps empty cells from the start",
+          0.05 < b0 < 0.40, f"blank={b0:.2f}")
+
+    # sample blank fraction at 40% / 60% / 80% of the wall duration
+    samples = []
+    for frac in (0.40, 0.60, 0.80):
+        while time.time() - t0 < frac * 2.0:
+            app.pump(0.05)
+        samples.append(blank_frac(app.screen))
+    b1, b2, b3 = samples
+    check("wash advances downward",
+          b1 > b0 + 0.05 and b2 > b1 and b3 > b2,
+          f"{b0:.2f} -> {b1:.2f} -> {b2:.2f} -> {b3:.2f}")
+    # the wave accelerates: equal time slices must cover more ground each
+    # time (linear motion would give a ratio of ~1.0)
+    d1, d2 = b2 - b1, b3 - b2
+    check("wash accelerates", d2 > d1 * 1.12 and d2 > 0.02,
+          f"slice deltas {d1:.3f} -> {d2:.3f}")
+
+    rc = app.wait_exit(4)
+    check("sweep exits by itself with 0", rc == 0, f"rc={rc}")
+    app.pump(0.15)                          # drain the final all-empty frame
+    check("grid fully emptied at exit",
+          app.screen.red_count() == 0 and blank_frac(app.screen) > 0.98,
+          f"red={app.screen.red_count()} blank={blank_frac(app.screen):.2f}")
+    log = app.read_log()
+    check("sweep logged start+finish",
+          "sweep: start duration=2.00" in log and
+          "sweep: finished exit=0" in log,
+          [l for l in log.splitlines() if "sweep" in l])
+    app.close()
+
+    for bad in (["sweep"], ["sweep", "0"], ["sweep", "abc"],
+                ["sweep", "100"]):
+        bad_app = App(rows=20, cols=60, args=bad)
+        bad_app.pump(0.3)
+        rc = bad_app.wait_exit(3)
+        check(f"'hextrix {' '.join(bad)}' is rejected", rc == 2, f"rc={rc}")
+        bad_app.close()
+
+    app2 = App(rows=20, cols=60, args=["-h"])
+    app2.pump(0.3)
+    check("usage documents sweep", "sweep <seconds>" in
+          "".join(app2.screen.text()))
+    rc = app2.wait_exit(3)
+    check("sweep: help exits 0", rc == 0, f"rc={rc}")
+    app2.close()
+
+
 def test_resize():
     app = App(rows=40, cols=120, log="/tmp/hx_resize.log")
     app.pump(1.5)
@@ -538,6 +633,7 @@ def main():
         "styles": test_styles,
         "colors": test_colors,
         "speed": test_speed,
+        "sweep": test_sweep,
         "resize": test_resize,
     }
     if which == "all":
@@ -546,7 +642,7 @@ def main():
     elif which in tests:
         tests[which]()
     else:
-        print("usage: harness.py [all|basic|keys|styles|colors|speed|resize]")
+        print("usage: harness.py [all|basic|keys|styles|colors|speed|sweep|resize]")
         return 2
     ok = sum(1 for _, p in RESULTS if p)
     print(f"\n{ok}/{len(RESULTS)} passed")
