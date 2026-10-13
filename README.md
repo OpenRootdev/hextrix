@@ -41,13 +41,17 @@ make
 ./hextrix
 ```
 
-To put it on your `PATH` (installed to `~/.local/bin`, already on PATH on
+One-shot install into `~/.local/bin` (usually already on PATH, and on
 Omarchy):
 
 ```bash
-make install        # copies to ~/.local/bin/hextrix
+./install.sh        # builds, then installs ~/.local/bin/hextrix
 hextrix
 ```
+
+`./uninstall.sh` removes it again. Both scripts honor a custom `PREFIX`
+(default `~/.local`). The Makefile offers the same via `make install` /
+`make uninstall`.
 
 PipeWire headers are optional and detected automatically:
 
@@ -184,6 +188,10 @@ hextrix/
 └── tests/
     └── harness.py    pty-based acceptance tests (python3 tests/harness.py)
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
 ## Changelog
 
