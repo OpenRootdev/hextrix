@@ -1,6 +1,6 @@
 #!/bin/sh
 # Hextrix uninstaller. Works piped or from a checkout:
-#   curl -fsSL https://raw.githubusercontent.com/atif-1402/hextrix/main/uninstall.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/OpenRootdev/hextrix/main/uninstall.sh | sh
 set -eu
 
 PREFIX="${PREFIX:-$HOME/.local}"

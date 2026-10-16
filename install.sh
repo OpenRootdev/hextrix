@@ -1,11 +1,11 @@
 #!/bin/sh
 # Hextrix installer. Works from a checkout or piped:
-#   curl -fsSL https://raw.githubusercontent.com/atif-1402/hextrix/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/OpenRootdev/hextrix/main/install.sh | sh
 set -eu
 
 PREFIX="${PREFIX:-$HOME/.local}"
 BINDIR="$PREFIX/bin"
-REPO="https://github.com/atif-1402/hextrix.git"
+REPO="https://github.com/OpenRootdev/hextrix.git"
 
 SRC_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd || true)
 CLONE=""

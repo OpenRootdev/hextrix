@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/atif-1402/hextrix/releases/latest"><img src="https://img.shields.io/github/v/release/atif-1402/hextrix?sort=semver" alt="latest release"></a>
+  <a href="https://github.com/OpenRootdev/hextrix/releases/latest"><img src="https://img.shields.io/github/v/release/OpenRootdev/hextrix?sort=semver" alt="latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license: MIT"></a>
-  <a href="https://github.com/atif-1402/hextrix"><img src="https://img.shields.io/badge/platform-Linux-lightgrey" alt="platform: Linux"></a>
+  <a href="https://github.com/OpenRootdev/hextrix"><img src="https://img.shields.io/badge/platform-Linux-lightgrey" alt="platform: Linux"></a>
   <a href="https://invisible-island.net/ncurses/"><img src="https://img.shields.io/badge/UI-ncurses-4c1" alt="UI: ncurses"></a>
 </p>
 
@@ -63,13 +63,13 @@ One-liner — clones, builds and installs into `~/.local/bin` (already on PATH
 on Omarchy):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/atif-1402/hextrix/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/OpenRootdev/hextrix/main/install.sh | sh
 ```
 
 Uninstall:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/atif-1402/hextrix/main/uninstall.sh | sh
+curl -fsSL https://raw.githubusercontent.com/OpenRootdev/hextrix/main/uninstall.sh | sh
 ```
 
 Both honor a custom `PREFIX` (default `~/.local`). They need `git`, `make`,
@@ -85,7 +85,7 @@ automatically; install `pipewire` if you want audio reactivity.
 ### Build from source
 
 ```bash
-git clone https://github.com/atif-1402/hextrix.git
+git clone https://github.com/OpenRootdev/hextrix.git
 cd hextrix
 make            # build only          -> ./hextrix
 ./install.sh    # build + install     -> ~/.local/bin/hextrix
