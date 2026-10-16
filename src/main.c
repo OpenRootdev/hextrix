@@ -397,7 +397,7 @@ int main(int argc, char **argv)
             /* token values flicker to new random pairs at the set rate */
             if (ui.token_rate > 0.0f) {
                 size_t cells = (size_t)grid.cols * (size_t)grid.rows;
-                tok_accum += ui.token_rate * (float)cells * dt;
+                tok_accum += (float)((double)ui.token_rate * (double)cells * dt);
                 int k = (int)tok_accum;
                 tok_accum -= (float)k;
                 if (k > 0)
