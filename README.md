@@ -236,6 +236,12 @@ hextrix/
 
 MIT — see [LICENSE](LICENSE).
 
+## Support
+
+If Hextrix makes your terminal feel alive, you can fuel the next one:
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-support%20me-ff5f5?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/anom538)
+
 ## Changelog
 
 ### 1.1.0
