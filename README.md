@@ -23,8 +23,7 @@
   <a href="#visualizer-styles">Visualizers</a> ·
   <a href="#audio">Audio</a> ·
   <a href="#environment">Environment</a> ·
-  <a href="#license">License</a> ·
-  <a href="#changelog">Changelog</a>
+  <a href="#license">License</a>
 </p>
 
 <p align="center">
@@ -243,27 +242,3 @@ MIT — see [LICENSE](LICENSE).
 If Hextrix makes your terminal feel alive, you can fuel the next one:
 
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-support%20me-ff5f5?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/anom538)
-
-## Changelog
-
-### 1.1.0
-
-- New one-shot subcommand `hextrix sweep <duration>`: instant random fill
-  with plenty of empty cells, then a wavy front rolls down from above and
-  washes the grid — already moving on the first frame, accelerating as it
-  falls — and exits when done. `q` / `Esc` / `Ctrl+C` aborts cleanly.
-- `←` / `→` control fluid speed (0.15×–4×).
-- `?` toggles the help overlay alongside `h`; `Esc` closes it and no
-  longer stalls the animation.
-- Switching hints (accent, visualizer, speed) sit on a dim plate so they
-  stay readable over the tokens.
-- Fixed the pty test harness parser (CSI `J` / `K` parameters).
-
-### 1.0.0
-
-- First release: full-screen hex-token grid with curl-flow liquid color,
-  PipeWire audio reactivity (bass/mid/treble), three visualizer modes
-  (`wave`, `rain`, off/`liquid`), nine accent colors, fluid-speed and
-  token-rate ladders, help overlay, clean terminal restore on exit, and a
-  pty-based test harness.
-
