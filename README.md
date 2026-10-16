@@ -9,6 +9,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license: MIT"></a>
   <a href="https://github.com/OpenRootdev/hextrix"><img src="https://img.shields.io/badge/platform-Linux-lightgrey" alt="platform: Linux"></a>
   <a href="https://invisible-island.net/ncurses/"><img src="https://img.shields.io/badge/UI-ncurses-4c1" alt="UI: ncurses"></a>
+  <a href="https://ko-fi.com/anom538"><img src="https://img.shields.io/badge/Ko--fi-support%20me-ff5f5?style=flat&logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
 </p>
 
 <p align="center">
@@ -227,6 +228,7 @@ hextrix/
 │   ├── fluid.c/.h    noise fields, advection, thresholding, audio input
 │   ├── renderer.c/.h dirty per-cell rendering, overlays, flash labels
 │   ├── input.c/.h    key handling and UI state
+│   ├── sweep.c/.h    one-shot sweep mode (hextrix sweep <duration>)
 │   └── audio.c/.h    PipeWire capture + band analysis (or stubs)
 └── tests/
     └── harness.py    pty-based acceptance tests (python3 tests/harness.py)
@@ -264,4 +266,4 @@ If Hextrix makes your terminal feel alive, you can fuel the next one:
   (`wave`, `rain`, off/`liquid`), nine accent colors, fluid-speed and
   token-rate ladders, help overlay, clean terminal restore on exit, and a
   pty-based test harness.
-# hextrix
+
