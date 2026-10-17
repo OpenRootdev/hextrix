@@ -30,9 +30,11 @@ class Screen:
         self.rows, self.cols = rows, cols
         self.ch = [[" "] * cols for _ in range(rows)]
         self.red = [[False] * cols for _ in range(rows)]
+        self.fg = [[-1] * cols for _ in range(rows)]   # ANSI fg code, -1 none
         self.sgr_codes = set()
         self.cx = self.cy = 0
         self.cur_red = False
+        self.cur_fg = -1
 
     def resize(self, rows, cols):
         self.__init__(rows, cols)
@@ -70,6 +72,7 @@ class Screen:
                 if 0 <= self.cy < self.rows and 0 <= self.cx < self.cols:
                     self.ch[self.cy][self.cx] = chr(b)
                     self.red[self.cy][self.cx] = self.cur_red
+                    self.fg[self.cy][self.cx] = self.cur_fg
                 self.cx += 1
                 if self.cx >= self.cols:
                     self.cx = 0
@@ -103,20 +106,25 @@ class Screen:
             if mode in (2, 3):
                 self.ch = [[" "] * self.cols for _ in range(self.rows)]
                 self.red = [[False] * self.cols for _ in range(self.rows)]
+                self.fg = [[-1] * self.cols for _ in range(self.rows)]
             elif mode == 1:
                 for y in range(0, self.cy):
                     self.ch[y] = [" "] * self.cols
                     self.red[y] = [False] * self.cols
+                    self.fg[y] = [-1] * self.cols
                 for x in range(0, min(self.cx + 1, self.cols)):
                     self.ch[self.cy][x] = " "
                     self.red[self.cy][x] = False
+                    self.fg[self.cy][x] = -1
             else:  # mode 0: cursor through end of screen
                 for x in range(self.cx, self.cols):
                     self.ch[self.cy][x] = " "
                     self.red[self.cy][x] = False
+                    self.fg[self.cy][x] = -1
                 for y in range(self.cy + 1, self.rows):
                     self.ch[y] = [" "] * self.cols
                     self.red[y] = [False] * self.cols
+                    self.fg[y] = [-1] * self.cols
         elif final == "K":
             mode = nums[0] if nums else 0
             lo, hi = (0, self.cx + 1) if mode == 1 else \
@@ -125,6 +133,7 @@ class Screen:
             for x in range(max(lo, 0), min(hi, self.cols)):
                 self.ch[self.cy][x] = " "
                 self.red[self.cy][x] = False
+                self.fg[self.cy][x] = -1
         elif final == "m":
             self.sgr(body)
 
@@ -136,15 +145,20 @@ class Screen:
             self.sgr_codes.add(c)
             if c == 0:
                 self.cur_red = False
+                self.cur_fg = -1
             elif c in (31, 91):
                 self.cur_red = True
+                self.cur_fg = c
             elif c == 39 or 30 <= c <= 37 or 90 <= c <= 97:
                 self.cur_red = False
+                self.cur_fg = -1 if c == 39 else c
             elif c == 38 and i + 2 < len(codes):
                 if codes[i + 1] == 5 and codes[i + 2] in (1, 31):
                     self.cur_red = True
+                    self.cur_fg = 31
                 else:
                     self.cur_red = False
+                    self.cur_fg = -1
                 i += 2
             i += 1
 
@@ -154,6 +168,10 @@ class Screen:
 
     def red_count(self):
         return sum(sum(1 for v in row if v) for row in self.red)
+
+    def fg_count(self, fg):
+        """Count cells drawn with the given ANSI foreground code."""
+        return sum(sum(1 for v in row if v == fg) for row in self.fg)
 
     def red_mask(self):
         return [row[:] for row in self.red]
@@ -584,10 +602,16 @@ def test_sweep():
           "sweep: start duration=2.00" in log and
           "sweep: finished exit=0" in log,
           [l for l in log.splitlines() if "sweep" in l])
+    check("sweep defaults to the red accent",
+          "color=red" in log,
+          [l for l in log.splitlines() if "sweep: start" in l])
     app.close()
 
-    for bad in (["sweep"], ["sweep", "0"], ["sweep", "abc"],
-                ["sweep", "100"]):
+    # invalid arguments are rejected with exit 2
+    for bad in (["sweep", "0"], ["sweep", "abc"], ["sweep", "100"],
+                ["sweep", "-s", "0"], ["sweep", "-s"], ["sweep", "-s", "abc"],
+                ["sweep", "-c", "99"], ["sweep", "-c", "purple"],
+                ["sweep", "-c"], ["sweep", "1", "4", "extra"]):
         bad_app = App(rows=20, cols=60, args=bad)
         bad_app.pump(0.3)
         rc = bad_app.wait_exit(3)
@@ -596,11 +620,42 @@ def test_sweep():
 
     app2 = App(rows=20, cols=60, args=["-h"])
     app2.pump(0.3)
-    check("usage documents sweep", "sweep <seconds>" in
+    check("usage documents sweep", "sweep [options]" in
           "".join(app2.screen.text()))
     rc = app2.wait_exit(3)
     check("sweep: help exits 0", rc == 0, f"rc={rc}")
     app2.close()
+
+    # sweep --help exits 0 and lists the color option
+    app3 = App(rows=20, cols=60, args=["sweep", "--help"])
+    app3.pump(0.3)
+    txt = "".join(app3.screen.text())
+    check("sweep --help documents -s and -c",
+          "--seconds" in txt and "--color" in txt, txt[:200])
+    rc = app3.wait_exit(3)
+    check("sweep --help exits 0", rc == 0, f"rc={rc}")
+    app3.close()
+
+    # -c 4 must render blue accents (ANSI 34), not red
+    app4 = App(rows=20, cols=60, args=["-n", "sweep", "-s", "2.0", "-c", "4"],
+               log="/tmp/hx_sweep_blue.log")
+    app4.pump(0.3)
+    blue = app4.screen.fg_count(34)
+    red = app4.screen.fg_count(31)
+    check("sweep -c 4 renders blue accents", blue > 50 and red == 0,
+          f"blue={blue} red={red}")
+    app4.wait_exit(4)
+    app4.close()
+
+    # color by name, and positional shorthand "sweep <secs> <color>"
+    app5 = App(rows=20, cols=60, args=["-n", "sweep", "2.0", "cyan"],
+               log="/tmp/hx_sweep_cyan.log")
+    app5.pump(0.3)
+    cyan = app5.screen.fg_count(36)
+    check("sweep positional color 'cyan' renders cyan accents",
+          cyan > 50, f"cyan={cyan}")
+    app5.wait_exit(4)
+    app5.close()
 
 
 def test_resize():

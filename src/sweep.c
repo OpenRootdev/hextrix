@@ -51,8 +51,8 @@ static double sweep_now(void)
     return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;
 }
 
-int sweep_run(float seconds, const Grid *g, bool color_ok, bool dim_pair,
-              const volatile sig_atomic_t *quit)
+int sweep_run(float seconds, const Grid *g, int accent, bool color_ok,
+              bool dim_pair, const volatile sig_atomic_t *quit)
 {
     if (g->cols < 1 || g->rows < 1 || g->tokens == NULL)
         return 1;
@@ -89,7 +89,8 @@ int sweep_run(float seconds, const Grid *g, bool color_ok, bool dim_pair,
     const double k2 = 6.283185307179586 * (SWEEP_WAVES * 2.0 + 0.5) /
                       (double)g->cols;
 
-    chtype acc = color_ok ? (chtype)(COLOR_PAIR(1) | A_BOLD) : (chtype)A_BOLD;
+    int apair = (accent >= 1 && accent <= 9) ? accent : 1;
+    chtype acc = color_ok ? (chtype)(COLOR_PAIR(apair) | A_BOLD) : (chtype)A_BOLD;
     chtype body = dim_pair ? (chtype)(COLOR_PAIR(SWEEP_DIM_PAIR) | A_DIM)
                            : (chtype)A_DIM;
 

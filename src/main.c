@@ -7,6 +7,7 @@
  * random values at a speed the user controls.
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <math.h>
 #include <signal.h>
@@ -62,8 +63,10 @@ static void usage(FILE *out, const char *prog)
             "Hextrix %s — terminal fluid color toy\n"
             "\n"
             "Usage: %s [options]\n"
-            "       %s sweep <seconds>   fill the grid, wipe top -> bottom\n"
+            "       %s sweep [options] [seconds] [color]\n"
+            "                             fill the grid, wipe top -> bottom\n"
             "                             with acceleration, then exit\n"
+            "                             (see: %s sweep --help)\n"
             "\n"
             "  -a, --alnum      alphanumeric tokens instead of hexadecimal\n"
             "  -n, --no-audio   do not capture system audio\n"
@@ -77,7 +80,137 @@ static void usage(FILE *out, const char *prog)
             "      v           visualizer: off (liquid) / wave / rain\n"
             "      1-9         accent color (1 = red, the default)\n"
             "      left/right  fluid speed   esc closes help\n",
-            HX_VERSION, prog, prog);
+            HX_VERSION, prog, prog, prog);
+}
+
+/* Help text for the sweep subcommand only. */
+static void usage_sweep(FILE *out, const char *prog)
+{
+    fprintf(out,
+            "Hextrix %s — sweep mode\n"
+            "\n"
+            "Usage: %s sweep [options] [seconds] [color]\n"
+            "\n"
+            "  -s, --seconds SECS   duration, 0.1..60 (default 1.0)\n"
+            "  -c, --color COLOR    accent color (default red)\n"
+            "                       1-9, or a name:\n"
+            "                       red green yellow blue magenta cyan white\n"
+            "                       \"bright red\" \"bright magenta\"\n"
+            "  -h, --help           show this help\n"
+            "\n"
+            "Fill the grid instantly, then wipe it top -> bottom with\n"
+            "acceleration and exit when done.\n"
+            "\n"
+            "Examples:\n"
+            "  %s sweep 0.5          0.5s wipe, red accent\n"
+            "  %s sweep -s 1 -c 4    1s wipe, blue accent\n"
+            "  %s sweep -c cyan      default length, cyan accent\n"
+            "  %s sweep 2 magenta    positional form of -s 2 -c magenta\n",
+            HX_VERSION, prog, prog, prog, prog, prog);
+}
+
+static int accent_from_arg(const char *s);
+
+/* Parse the sweep subcommand's arguments, from argv[start] to argv[argc-1].
+ * Accepts flags (-s/--seconds, -c/--color, -h/--help) and positional values
+ * (seconds, then color), so "sweep 1 4" == "sweep -s 1 -c 4". Flags may
+ * appear before or after the positional values.
+ *
+ * On success fills *secs (0.1..60) and *accent (1..9) and returns -1.
+ * Returns 0 if help was requested (already printed) and 2 on a usage error
+ * (message already printed). Defaults: 1.0s, red (accent 1). */
+static int parse_sweep(int argc, char **argv, int start,
+                       double *secs, int *accent)
+{
+    double s = 1.0;
+    int col = 1;                    /* red, the interactive default */
+    bool have_s = false, have_col = false;
+    int positional = 0;
+
+    for (int i = start; i < argc; i++) {
+        const char *a = argv[i];
+        if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
+            usage_sweep(stdout, argv[0]);
+            return 0;
+        } else if (strcmp(a, "-s") == 0 || strcmp(a, "--seconds") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "hextrix: %s needs a value\n", a);
+                return 2;
+            }
+            char *end = NULL;
+            double v = strtod(argv[++i], &end);
+            if (end == argv[i] || *end != '\0' || !isfinite(v) ||
+                v < 0.1 || v > 60.0) {
+                fprintf(stderr, "hextrix: sweep duration must be a number "
+                                "between 0.1 and 60 seconds\n");
+                return 2;
+            }
+            s = v;
+            have_s = true;
+        } else if (strcmp(a, "-c") == 0 || strcmp(a, "--color") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "hextrix: %s needs a value\n", a);
+                return 2;
+            }
+            int v = accent_from_arg(argv[++i]);
+            if (v == 0) {
+                fprintf(stderr, "hextrix: unknown color '%s' (use 1-9 or a "
+                                "name like red, green, \"bright magenta\")\n",
+                        argv[i]);
+                return 2;
+            }
+            col = v;
+            have_col = true;
+        } else if (a[0] == '-' && a[1] != '\0') {
+            fprintf(stderr, "hextrix: unknown sweep option '%s'\n", a);
+            usage_sweep(stderr, argv[0]);
+            return 2;
+        } else {
+            /* positional: first is seconds, second is color */
+            if (positional == 0) {
+                if (have_s) {
+                    fprintf(stderr, "hextrix: duration given twice "
+                                    "(-s and positional)\n");
+                    return 2;
+                }
+                char *end = NULL;
+                double v = strtod(a, &end);
+                if (end == a || *end != '\0' || !isfinite(v) ||
+                    v < 0.1 || v > 60.0) {
+                    fprintf(stderr, "hextrix: sweep duration must be a number "
+                                    "between 0.1 and 60 seconds\n");
+                    return 2;
+                }
+                s = v;
+                have_s = true;
+                positional++;
+            } else if (positional == 1) {
+                if (have_col) {
+                    fprintf(stderr, "hextrix: color given twice "
+                                    "(-c and positional)\n");
+                    return 2;
+                }
+                int v = accent_from_arg(a);
+                if (v == 0) {
+                    fprintf(stderr, "hextrix: unknown color '%s' (use 1-9 or "
+                                    "a name like red, green, bright magenta)\n",
+                            a);
+                    return 2;
+                }
+                col = v;
+                have_col = true;
+                positional++;
+            } else {
+                fprintf(stderr, "hextrix: unexpected argument '%s'\n", a);
+                usage_sweep(stderr, argv[0]);
+                return 2;
+            }
+        }
+    }
+
+    *secs = s;
+    *accent = col;
+    return -1;
 }
 
 static int count_red(const Fluid *f)
@@ -103,6 +236,37 @@ static const char *accent_name(int accent)
     if (accent < 1 || accent > 9)
         return "red";
     return names[accent - 1];
+}
+
+/* Parse a color argument for the sweep subcommand: "1".."9" or a name.
+ * Names are matched case-insensitively, ignoring spaces, '-' and '_',
+ * so "bright red", "bright-red" and "BrightRed" are all accent 8.
+ * Returns 1..9, or 0 if the argument is not a valid accent. */
+static int accent_from_arg(const char *s)
+{
+    static const char *const names[9] = {
+        "red", "green", "yellow", "blue", "magenta",
+        "cyan", "white", "brightred", "brightmagenta"
+    };
+    if (s == NULL || *s == '\0')
+        return 0;
+    if (s[0] >= '1' && s[0] <= '9' && s[1] == '\0')
+        return s[0] - '0';
+
+    char norm[32];
+    size_t j = 0;
+    for (size_t i = 0; s[i] != '\0' && j < sizeof norm - 1; i++) {
+        char c = s[i];
+        if (c == ' ' || c == '-' || c == '_')
+            continue;
+        norm[j++] = (char)tolower((unsigned char)c);
+    }
+    norm[j] = '\0';
+    for (int i = 0; i < 9; i++) {
+        if (strcmp(norm, names[i]) == 0)
+            return i + 1;
+    }
+    return 0;
 }
 
 static const char *audio_status_name(int st)
@@ -140,6 +304,7 @@ int main(int argc, char **argv)
     bool want_audio = true;
     double fps = 60.0;
     double sweep_secs = -1.0;       /* > 0: one-shot sweep subcommand */
+    int sweep_accent = 1;           /* sweep accent color, 1 = red */
     const char *prog = argc > 0 ? argv[0] : "hextrix";
 
     for (int i = 1; i < argc; i++) {
@@ -163,19 +328,13 @@ int main(int argc, char **argv)
                 fprintf(stderr, "hextrix: sweep specified twice\n");
                 return 2;
             }
-            if (i + 1 >= argc) {
-                fprintf(stderr, "hextrix: sweep needs a duration in seconds\n");
-                usage(stderr, prog);
-                return 2;
-            }
-            char *end = NULL;
-            sweep_secs = strtod(argv[++i], &end);
-            if (end == argv[i] || *end != '\0' || !isfinite(sweep_secs) ||
-                sweep_secs < 0.1 || sweep_secs > 60.0) {
-                fprintf(stderr, "hextrix: sweep duration must be a number "
-                                "between 0.1 and 60 seconds\n");
-                return 2;
-            }
+            sweep_secs = 1.0;       /* placeholder, overwritten below */
+            int rc = parse_sweep(argc, argv, i + 1, &sweep_secs, &sweep_accent);
+            if (rc == 0)
+                return 0;           /* sweep --help was printed */
+            if (rc != -1)
+                return rc;          /* usage error, message already printed */
+            i = argc;               /* parse_sweep consumed the rest */
         } else if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
             usage(stdout, prog);
             return 0;
@@ -273,9 +432,10 @@ int main(int argc, char **argv)
     ui_init(&ui);
 
     if (sweep_secs > 0.0) {
-        log_msg("sweep: start duration=%.2fs", sweep_secs);
-        exit_code = sweep_run((float)sweep_secs, &grid, color_ok, dim_pair,
-                              &g_signal_quit);
+        log_msg("sweep: start duration=%.2fs color=%s",
+                sweep_secs, accent_name(sweep_accent));
+        exit_code = sweep_run((float)sweep_secs, &grid, sweep_accent,
+                              color_ok, dim_pair, &g_signal_quit);
         log_msg("sweep: finished exit=%d", exit_code);
         goto cleanup;
     }

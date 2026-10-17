@@ -103,16 +103,27 @@ make            # build only          -> ./hextrix
 
 ### Sweep mode
 
-`hextrix sweep <duration>` is a one-shot intro effect: it lights a random,
+`hextrix sweep` is a one-shot intro effect: it lights a random,
 incomplete subset of the tokens instantly (most of the grid stays empty),
 then a **wavy front** rolls down from above and washes the grid — already
-moving on the very first frame, accelerating as it falls over `<duration>` seconds (0.1–60) and exits
+moving on the very first frame, accelerating as it falls over the duration
+seconds (0.1–60, default 1.0) and exits
 as soon as the wiper reaches the last row. `q` / `Esc` / `Ctrl+C` aborts
-early (still a clean exit). Combine with `-a` for alphanumeric tokens:
+early (still a clean exit). Combine with `-a` for alphanumeric tokens.
+
+The duration and accent color are set with flags — or positionally:
 
 ```bash
-hextrix sweep 0.5
+hextrix sweep -s 0.5 -c 4      # 0.5s wipe, blue accent
+hextrix sweep -c cyan          # default length, cyan accent
+hextrix sweep 0.5 magenta      # positional form of -s 0.5 -c magenta
+hextrix sweep 0.5              # duration only, default red accent
 ```
+
+`-s` / `--seconds` sets the duration (0.1–60, default 1.0). `-c` / `--color`
+picks the accent: `1`–`9` or a name (`red green yellow blue magenta cyan
+white "bright red" "bright magenta"`); the default is red. See
+`hextrix sweep --help`.
 
 ### Keys
 
@@ -227,7 +238,7 @@ hextrix/
 │   ├── fluid.c/.h    noise fields, advection, thresholding, audio input
 │   ├── renderer.c/.h dirty per-cell rendering, overlays, flash labels
 │   ├── input.c/.h    key handling and UI state
-│   ├── sweep.c/.h    one-shot sweep mode (hextrix sweep <duration>)
+│   ├── sweep.c/.h    one-shot sweep mode (hextrix sweep)
 │   └── audio.c/.h    PipeWire capture + band analysis (or stubs)
 └── tests/
     └── harness.py    pty-based acceptance tests (python3 tests/harness.py)

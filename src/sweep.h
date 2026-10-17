@@ -14,7 +14,7 @@
  * The terminal must already be initialized (colors, grid). Returns 0 on
  * completion or clean abort (q / Esc / Ctrl+C / signal), 1 on failure.
  */
-int sweep_run(float seconds, const Grid *g, bool color_ok, bool dim_pair,
-              const volatile sig_atomic_t *quit);
+int sweep_run(float seconds, const Grid *g, int accent, bool color_ok,
+              bool dim_pair, const volatile sig_atomic_t *quit);
 
 #endif
