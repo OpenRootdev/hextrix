@@ -1,7 +1,7 @@
 <h1 align="center">Hextrix</h1>
 
 <p align="center">
-  <b>v1.1.0 — Stationary data, living color.</b>
+  <b>v1.1.2 — Stationary data, living color.</b>
 </p>
 
 <p align="center">
