@@ -27,7 +27,7 @@
 #include "renderer.h"
 #include "sweep.h"
 
-#define HX_VERSION "1.1.0"
+#define HX_VERSION "1.1.2"
 
 static volatile sig_atomic_t g_signal_quit = 0;
 static FILE *g_log = NULL;
